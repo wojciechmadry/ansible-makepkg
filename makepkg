@@ -103,8 +103,7 @@ AUR_RPC_PATH = "rpc.php"
 AUR_SNAPSHOT_PATH = "cgit/aur.git/snapshot"
 
 def query_package_dir(module, name, version):
-
-    matcher = re.compile('%s-%s[\.xany0-9_-]*\.pkg\.tar\.xz$' % (name,version))
+    matcher = re.compile('%s-%s[\\.xany0-9_-]*\\.pkg\\.tar\\.xz$' % (name,version))
     for filename in os.listdir(PACKAGE_CACHE):
         if matcher.match(filename):
             return os.path.join(PACKAGE_CACHE,filename)
@@ -176,7 +175,7 @@ def make_package(module, pkg, pkg_file_src):
         # copy file to build directory
         try:
             shutil.copy2(pkg_file_src, build_dir)
-        except Exception(err):
+        except Exception as err:
             module.fail_json(msg="failed to copy package %s to build directory %s: %s" % (pkg_file_src, build_dir, str(err)))
     else:
         aur_req = urlunsplit((AUR_SCHEME, AUR_NETLOC, "%s/%s" % (AUR_SNAPSHOT_PATH, pkg_file_basename), "", ""))
@@ -189,7 +188,7 @@ def make_package(module, pkg, pkg_file_src):
         f = open(pkg_file_dest, 'wb')
         try:
             shutil.copyfileobj(rsp, f)
-        except Exception(err):
+        except Exception as err:
             os.remove(pkg_file_dest)
             module.fail_json(msg="failed to create package archive file: %s" % str(err))
         f.close()
@@ -208,27 +207,27 @@ def make_package(module, pkg, pkg_file_src):
     if rc != 0:
         module.fail_json(msg="failed to build package %s in %s from %s" % (pkg, pkg_file, build_dir), stderr=stderr)
 
-    found_file = None
-    matcher = re.compile('%s-.*\.pkg\.tar\.xz$' % pkg)
+    found_file = ""
+    matcher = re.compile('%s-.*\\.pkg\\.tar\\.xz$' % pkg)
     for filename in os.listdir(build_dir):
         # check if filename not found, if not we need to fail out
         if matcher.match(filename):
             found_file = filename
 
-    if not found_file:
+    if found_file == "":
         module.fail_json(msg="failed to find the built package for %s" % pkg)
 
     # Keep package in cache for downgrades later.  Use shutil.copy since we
     # don't care about preserving permissions.
     try:
         shutil.copy(os.path.join(build_dir, found_file), PACKAGE_CACHE)
-    except Exception(err):
+    except Exception as err:
         module.fail_json("Failed to copy package %s to cache %s: %s" % (found_file, PACKAGE_CACHE, str(err)))
 
     # Don't leave build files lying around
     try:
         shutil.rmtree(build_dir)
-    except Exception(err):
+    except Exception as err:
         module.fail_json(msg="failed to remove temporary build directory %s: %s" % (build_dir, str(err)))
 
     return os.path.join(PACKAGE_CACHE,found_file)
