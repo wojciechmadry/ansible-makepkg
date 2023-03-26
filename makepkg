@@ -91,7 +91,7 @@ import re
 import pwd
 import grp
 import shutil
-import urllib
+import urllib.parse
 from ansible.module_utils.six.moves.urllib.parse import urlunsplit
 
 PACMAN_PATH = "/usr/bin/pacman"
@@ -261,7 +261,7 @@ def install_package(module, pkg, pkg_file):
 
     if not pkg_file:
         # this is an aur pkg
-        rpc_params = urllib.urlencode({"type": "info", "arg": pkg})
+        rpc_params = urllib.parse.urlencode({"type": "info", "arg": pkg})
         rpc_req = urlunsplit((AUR_SCHEME, AUR_NETLOC, AUR_RPC_PATH, rpc_params, ""))
         rsp, info = fetch_url(module, rpc_req)
 
